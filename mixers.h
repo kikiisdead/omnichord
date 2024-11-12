@@ -75,7 +75,4 @@ private:
 	audio_block_t *inputQueueArray[11];
 };
 
-
-
 #endif
-

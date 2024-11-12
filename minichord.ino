@@ -98,8 +98,7 @@ void setup() {
   //capacitive touch sensor
   if (!cap.begin()) {
     Serial.println("CAP1188 not found");
-    while (1)
-      ;
+    while (1);
   }
   Serial.println("CAP1188 found!");
 
@@ -115,8 +114,7 @@ void setup() {
   //display
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
-    while (1)
-      ;  // Don't proceed, loop forever
+    while (1);  // Don't proceed, loop forever
   }
   Serial.println("SSD1306 allocation success!");
   display.clearDisplay();
@@ -136,7 +134,7 @@ void setup() {
     sustainVoices[i]->setEnvelope(10, 200, 0.6, 80);
   }
   for (int i = 0; i < 8; i ++) {
-    strumVoices[i]->setEnvelope(10, 250, 0.3, 80);
+    strumVoices[i]->setEnvelope(10, 250, 0.3, 500);
   }
 
   //everything works if it hits this point

@@ -132,6 +132,3 @@ void AudioMixer11::update(void)
 		release(out);
 	}
 }
-
-
-
