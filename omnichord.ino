@@ -1,5 +1,7 @@
 #include "chord.h"
 #include "betterEncoder.h"
+#include "voice.h"
+#include "mixers.h"
 #include <Audio.h>
 #include <Wire.h>
 #include <SPI.h>
@@ -35,63 +37,36 @@ Adafruit_CAP1188 cap = Adafruit_CAP1188();
 
 static const unsigned char PROGMEM logo_bmp[] = { 0b00000000, 0b11000000, 0b00000001, 0b11000000, 0b00000001, 0b11000000, 0b00000011, 0b11100000, 0b11110011, 0b11100000, 0b11111110, 0b11111000, 0b01111110, 0b11111111, 0b00110011, 0b10011111, 0b00011111, 0b11111100, 0b00001101, 0b01110000, 0b00011011, 0b10100000, 0b00111111, 0b11100000, 0b00111111, 0b11110000, 0b01111100, 0b11110000, 0b01110000, 0b01110000, 0b00000000, 0b00110000 };
 
-// GUItool: begin automatically generated code
-  AudioSynthWaveform       sustainOsc1;    //xy=655.5,66
-  AudioSynthWaveform       sustainOsc2;    //xy=656.5,155
-  AudioSynthWaveform       sustainOsc3;    //xy=659.5,245
-  AudioSynthWaveform       strumOsc8;      //xy=664.5,1041
-  AudioSynthWaveform       strumOsc6;      //xy=667.5,860
-  AudioSynthWaveform       strumOsc7;      //xy=669.5,946
-  AudioSynthWaveform       strumOsc4;      //xy=672.5,657
-  AudioSynthWaveform       strumOsc1;      //xy=675.5,349
-  AudioSynthWaveform       strumOsc2;      //xy=677.5,467
-  AudioSynthWaveform       strumOsc3;      //xy=678.5,573
-  AudioSynthWaveform       strumOsc5;      //xy=684.5,751
-  AudioEffectEnvelope      sustainEnv1;    //xy=984.7500114440918,91.25000190734863
-  AudioEffectEnvelope      sustainEnv3;    //xy=985.7500114440918,230.25000190734863
-  AudioEffectEnvelope      strumEnv8;      //xy=982.5,1066
-  AudioEffectEnvelope      strumEnv6;      //xy=983.5,868
-  AudioEffectEnvelope      strumEnv5;      //xy=985.5,768
-  AudioEffectEnvelope      strumEnv4;      //xy=986.5,652
-  AudioEffectEnvelope      strumEnv3;      //xy=988.5,567
-  AudioEffectEnvelope      strumEnv2;      //xy=991.5,466
-  AudioEffectEnvelope      sustainEnv2;    //xy=992.7500114440918,168.25000190734863
-  AudioEffectEnvelope      strumEnv1;      //xy=993.5,346
-  AudioEffectEnvelope      strumEnv7;      //xy=991.5,972
-  AudioMixer4              sustainMixer;   //xy=1192.000015258789,175.00000381469727
-  AudioMixer4              strumMixer1;    //xy=1210.5,489
-  AudioMixer4              strumMixer2;    //xy=1216.5,917
-  AudioMixer4              finalMixer;     //xy=1381.5,495
-  AudioOutputI2S           i2sOut;         //xy=1552.5,493
-  AudioConnection          patchCord1(sustainOsc1, sustainEnv1);
-  AudioConnection          patchCord2(sustainOsc2, sustainEnv2);
-  AudioConnection          patchCord3(sustainOsc3, sustainEnv3);
-  AudioConnection          patchCord4(strumOsc8, strumEnv8);
-  AudioConnection          patchCord5(strumOsc6, strumEnv6);
-  AudioConnection          patchCord6(strumOsc7, strumEnv7);
-  AudioConnection          patchCord7(strumOsc4, strumEnv4);
-  AudioConnection          patchCord8(strumOsc1, strumEnv1);
-  AudioConnection          patchCord9(strumOsc2, strumEnv2);
-  AudioConnection          patchCord10(strumOsc3, strumEnv3);
-  AudioConnection          patchCord11(strumOsc5, strumEnv5);
-  AudioConnection          patchCord12(sustainEnv1, 0, sustainMixer, 0);
-  AudioConnection          patchCord13(sustainEnv3, 0, sustainMixer, 2);
-  AudioConnection          patchCord14(strumEnv8, 0, strumMixer2, 3);
-  AudioConnection          patchCord15(strumEnv6, 0, strumMixer2, 1);
-  AudioConnection          patchCord16(strumEnv5, 0, strumMixer2, 0);
-  AudioConnection          patchCord17(strumEnv4, 0, strumMixer1, 3);
-  AudioConnection          patchCord18(strumEnv3, 0, strumMixer1, 2);
-  AudioConnection          patchCord19(strumEnv2, 0, strumMixer1, 1);
-  AudioConnection          patchCord20(sustainEnv2, 0, sustainMixer, 1);
-  AudioConnection          patchCord21(strumEnv1, 0, strumMixer1, 0);
-  AudioConnection          patchCord22(strumEnv7, 0, strumMixer2, 2);
-  AudioConnection          patchCord23(sustainMixer, 0, finalMixer, 0);
-  AudioConnection          patchCord24(strumMixer1, 0, finalMixer, 1);
-  AudioConnection          patchCord25(strumMixer2, 0, finalMixer, 2);
-  AudioConnection          patchCord26(finalMixer, 0, i2sOut, 0);
-  AudioConnection          patchCord27(finalMixer, 0, i2sOut, 1);
-  AudioControlSGTL5000     audioShield;    //xy=1003.5,50
-// GUItool: end automatically generated code
+Voice sustainVoice1(WAVEFORM_TRIANGLE, 0.5);
+Voice sustainVoice2(WAVEFORM_TRIANGLE, 0.5);
+Voice sustainVoice3(WAVEFORM_TRIANGLE, 0.5);
+
+Voice strumVoice1(WAVEFORM_TRIANGLE, 0.5);
+Voice strumVoice2(WAVEFORM_TRIANGLE, 0.5);
+Voice strumVoice3(WAVEFORM_TRIANGLE, 0.5);
+Voice strumVoice4(WAVEFORM_TRIANGLE, 0.5);
+Voice strumVoice5(WAVEFORM_TRIANGLE, 0.5);
+Voice strumVoice6(WAVEFORM_TRIANGLE, 0.5);
+Voice strumVoice7(WAVEFORM_TRIANGLE, 0.5);
+Voice strumVoice8(WAVEFORM_TRIANGLE, 0.5);
+
+AudioMixer11 mixer;
+AudioOutputI2S i2sOut;
+AudioControlSGTL5000 audioShield;
+
+AudioConnection patchCord1(sustainVoice1.envelope, 0, mixer, 0);
+AudioConnection patchCord2(sustainVoice2.envelope, 0, mixer, 1);
+AudioConnection patchCord3(sustainVoice3.envelope, 0, mixer, 2);
+AudioConnection patchCord4(strumVoice1.envelope, 0, mixer, 3);
+AudioConnection patchCord5(strumVoice2.envelope, 0, mixer, 4);
+AudioConnection patchCord6(strumVoice3.envelope, 0, mixer, 5);
+AudioConnection patchCord7(strumVoice4.envelope, 0, mixer, 6);
+AudioConnection patchCord8(strumVoice5.envelope, 0, mixer, 7);
+AudioConnection patchCord9(strumVoice6.envelope, 0, mixer, 8);
+AudioConnection patchCord10(strumVoice7.envelope, 0, mixer, 9);
+AudioConnection patchCord11(strumVoice8.envelope, 0, mixer, 10);
+AudioConnection patchCord12(mixer, 0, i2sOut, 0);
+AudioConnection patchCord13(mixer, 0, i2sOut, 1);
 
 Chord chord1(chordPin1);
 Chord chord2(chordPin2);
@@ -101,15 +76,8 @@ Chord chord5(chordPin5);
 Chord chord6(chordPin6);
 Chord chord7(chordPin7);
 
-//sustain voices parallel lists of things
-AudioSynthWaveform* sustainOscs[3] = { &sustainOsc1, &sustainOsc2, &sustainOsc3 };
-AudioEffectEnvelope* sustainEnvs[3] = { &sustainEnv1, &sustainEnv2, &sustainEnv3 };
-
-//strum voices parallel list of things
-AudioSynthWaveform* strumOscs[8] = { &strumOsc1, &strumOsc2, &strumOsc3, &strumOsc4, &strumOsc5, &strumOsc6, &strumOsc7, &strumOsc8 };
-AudioEffectEnvelope* strumEnvs[8] = { &strumEnv2, &strumEnv2, &strumEnv3, &strumEnv4, &strumEnv5, &strumEnv6, &strumEnv7, &strumEnv8 };
-
-AudioMixer4* mixers[4] = { &sustainMixer, &strumMixer1, &strumMixer2, &finalMixer };
+Voice* sustainVoices[3] = { &sustainVoice1, &sustainVoice2, &sustainVoice3 };
+Voice* strumVoices[8] = { &strumVoice1, &strumVoice2, &strumVoice3, &strumVoice4, &strumVoice5, &strumVoice6, &strumVoice7, &strumVoice8 };
 
 Chord* chords[7] = { &chord1, &chord2, &chord3, &chord4, &chord5, &chord6, &chord7 };
 Button buttons[7] = { Button(chordPin1), Button(chordPin2), Button(chordPin3), Button(chordPin4), Button(chordPin5), Button(chordPin6), Button(chordPin7) };
@@ -131,7 +99,8 @@ void setup() {
   //capacitive touch sensor
   if (!cap.begin()) {
     Serial.println("CAP1188 not found");
-    while (1);
+    while (1)
+      ;
   }
   Serial.println("CAP1188 found!");
 
@@ -140,14 +109,15 @@ void setup() {
     chords[i]->noteOnHandler(noteOn);
     chords[i]->noteOffHandler(noteOff);
     chords[i]->capCheckHandler(adaCapCheck);
-    chords[i]->initRoot(i*2);
+    chords[i]->initRoot(i * 2);
     chords[i]->setChordType(MAJOR);
   }
 
   //display
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
-    while (1);  // Don't proceed, loop forever
+    while (1)
+      ;  // Don't proceed, loop forever
   }
   Serial.println("SSD1306 allocation success!");
   display.clearDisplay();
@@ -158,21 +128,11 @@ void setup() {
   AudioMemory(24);
   audioShield.enable();
   audioShield.volume(volume);
-  //initializing all the audio objects
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
-      mixers[j]->gain(i, 1);
-    }
+
+  for (int i = 0; i < 11; i++) {
+    mixer.gain(i, 0.5);
   }
-  for (int i = 0; i < 3; i++) {
-    sustainOscs[i]->begin(WAVEFORM_TRIANGLE);
-    sustainOscs[i]->amplitude(0.5);
-  }
-  for (int i = 0; i < 8; i++) {
-    strumOscs[i]->begin(WAVEFORM_TRIANGLE);
-    strumOscs[i]->amplitude(0.4);
-    strumEnvs[i]->release(1000);
-  }
+
   //everything works if it hits this point
   Serial.println("I'm working");
 }
@@ -188,22 +148,19 @@ void loop() {
 
 void noteOn(int voice, int noteValue, bool selector) {
   usbMIDI.sendNoteOn(noteValue, 127, 1);
-  float freq = 440 * pow(2.0, (float)(noteValue - 69) / (float)12);  //turn the midi note value into frequency value to be used with the oscillator
   if (selector == SUSTAIN) {
-    sustainOscs[voice]->frequency(freq);
-    sustainEnvs[voice]->noteOn();
+    sustainVoices[voice]->noteOn(noteValue);
   } else {
-    strumOscs[voice]->frequency(freq);
-    strumEnvs[voice]->noteOn();
+    strumVoices[voice]->noteOn(noteValue);
   }
 }
 
 void noteOff(int voice, int noteValue, bool selector) {
   usbMIDI.sendNoteOff(noteValue, 0, 1);
   if (selector == SUSTAIN) {
-    sustainEnvs[voice]->noteOff();
+    sustainVoices[voice]->noteOff();
   } else {
-    strumEnvs[voice]->noteOff();
+    strumVoices[voice]->noteOff();
   }
 }
 
@@ -266,11 +223,11 @@ void checkEdit() {
 
 void displayChordRoot(int root, chordTypes type) {
   display.clearDisplay();
-  display.setTextSize(4);               // Normal 1:1 pixel scale
+  display.setTextSize(4);  // Normal 1:1 pixel scale
   display.setCursor(0, 0);
 
   if (editMode == ROOTEDIT) {
-    display.setTextColor(SSD1306_BLACK, SSD1306_WHITE); //highlight if in ROOTEDIT
+    display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);  //highlight if in ROOTEDIT
   } else {
     display.setTextColor(SSD1306_WHITE);
   }
@@ -314,7 +271,7 @@ void displayChordRoot(int root, chordTypes type) {
   }
 
   if (editMode == CHORDEDIT) {
-    display.setTextColor(SSD1306_BLACK, SSD1306_WHITE); //highlight if in CHORDEDIT
+    display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);  //highlight if in CHORDEDIT
   } else {
     display.setTextColor(SSD1306_WHITE);
   }
