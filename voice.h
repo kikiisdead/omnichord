@@ -14,8 +14,9 @@ public:
   AudioEffectEnvelope             envelope;
   AudioConnection                 *patchCord[1]; // total patchCordCount:1 including array typed ones.
 
-  Voice(int waveform, float amplitude);
+  Voice(int waveform_, float amplitude_);
   void setEnvelope(float attack, float decay, float sustain, float release);
+  void setWaveform(int waveform_, float amplitude_);
   void noteOn(int note);
   void noteOff();
 };

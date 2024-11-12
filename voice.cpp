@@ -14,6 +14,11 @@ void Voice::setEnvelope(float attack, float decay, float sustain, float release)
   envelope.release(release);
 }
 
+void Voice::setWaveform(int waveform_, float amplitude_) {
+  waveform.begin(waveform_);
+  waveform.amplitude(amplitude_);
+}
+
 void Voice::noteOn(int note) {
   float freq = 440 * pow(2.0, (float)(note - 69) / (float)12);
   waveform.frequency(freq);
