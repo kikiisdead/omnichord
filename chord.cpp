@@ -63,7 +63,6 @@ void Chord::populateVector() {
   possibleNotes.clear();
   for (unsigned int i = 0; i < noteMap[type].size(); i++) {
     possibleNotes.push_back(root + noteMap[type].at(i));
-    //Serial.println(noteMap[type].at(i));
   }
   strumPitches.clear();
   while (strumPitches.size() < 8) {
@@ -81,7 +80,6 @@ void Chord::populateVector() {
     }
     strumPitches.push_back(note);
   }
-  std::sort(strumPitches.begin(), strumPitches.end());
   if (possibleNotes.size() == 3) {
     //patterns are none repeating so they are hardcoded for now (may need to think of ways to voice chords better)
     sustainPitches[0] = possibleNotes.at(0);       // root
@@ -93,8 +91,8 @@ void Chord::populateVector() {
     sustainPitches[2] = possibleNotes.at(2) + 12;  // third
     strumPitches.at(1) += 24;
     strumPitches.at(2) += 24;
-    std::sort(strumPitches.begin(), strumPitches.end());
   }
+  std::sort(strumPitches.begin(), strumPitches.end());
 }
 
 void Chord::noteOnHandler(void (*func)(int, int, bool)) {
