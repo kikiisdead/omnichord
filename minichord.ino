@@ -40,7 +40,6 @@ static const unsigned char PROGMEM logo_bmp[] = { 0b00000000, 0b11000000, 0b0000
 Voice sustainVoice1(WAVEFORM_TRIANGLE, 0.5);
 Voice sustainVoice2(WAVEFORM_TRIANGLE, 0.5);
 Voice sustainVoice3(WAVEFORM_TRIANGLE, 0.5);
-
 Voice strumVoice1(WAVEFORM_TRIANGLE, 0.5);
 Voice strumVoice2(WAVEFORM_TRIANGLE, 0.5);
 Voice strumVoice3(WAVEFORM_TRIANGLE, 0.5);
