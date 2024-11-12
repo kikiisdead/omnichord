@@ -133,6 +133,13 @@ void setup() {
     mixer.gain(i, 0.5);
   }
 
+  for (int i = 0; i < 3; i ++) {
+    sustainVoices[i]->setEnvelope(10, 200, 0.6, 80);
+  }
+  for (int i = 0; i < 8; i ++) {
+    strumVoices[i]->setEnvelope(10, 250, 0.3, 80);
+  }
+
   //everything works if it hits this point
   Serial.println("I'm working");
 }
@@ -269,7 +276,6 @@ void displayChordRoot(int root, chordTypes type) {
       display.println(F("B"));
       break;
   }
-
   if (editMode == CHORDEDIT) {
     display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);  //highlight if in CHORDEDIT
   } else {

@@ -4,6 +4,8 @@
 TODO
  - see if theres a way to simplify my chord object because she is complicated
  - see if I can simplify anything else
+  - simplify the display functions? it might be helpful to move into object?
+  - maybe doing this so that it can be made into a bit map?
  - Might be able to make the synthesis more complex?
 
 COMPLETED

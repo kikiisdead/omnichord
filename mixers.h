@@ -1,4 +1,3 @@
-
 /* This is a modified variant of the mixer code
  * to make it possible to autogenerate mixers with any size
  * by using the Design Tool++ by Manicksan (Jannik Svensson)
