@@ -12,14 +12,14 @@
 #include <Adafruit_CAP1188.h>
 #include <string.h>
 
-#define chordPin1 25
-#define chordPin2 26
-#define chordPin3 27
-#define chordPin4 28
-#define chordPin5 29
-#define chordPin6 30
-#define chordPin7 31
-#define editPin 10
+#define CHORDPIN1 25
+#define CHORDPIN2 26
+#define CHORDPIN3 27
+#define CHORDPIN4 28
+#define CHORDPIN5 29
+#define CHORDPIN6 30
+#define CHORDPIN7 31
+#define EDITPIN 10
 
 #define ROOTEDIT 0
 #define CHORDEDIT 1
@@ -68,20 +68,20 @@ AudioConnection patchCord11(strumVoice8.envelope, 0, mixer, 10);
 AudioConnection patchCord12(mixer, 0, i2sOut, 0);
 AudioConnection patchCord13(mixer, 0, i2sOut, 1);
 
-Chord chord1(chordPin1);
-Chord chord2(chordPin2);
-Chord chord3(chordPin3);
-Chord chord4(chordPin4);
-Chord chord5(chordPin5);
-Chord chord6(chordPin6);
-Chord chord7(chordPin7);
+Chord chord1(CHORDPIN1);
+Chord chord2(CHORDPIN2);
+Chord chord3(CHORDPIN3);
+Chord chord4(CHORDPIN4);
+Chord chord5(CHORDPIN5);
+Chord chord6(CHORDPIN6);
+Chord chord7(CHORDPIN7);
 
 Voice* sustainVoices[3] = { &sustainVoice1, &sustainVoice2, &sustainVoice3 };
 Voice* strumVoices[8] = { &strumVoice1, &strumVoice2, &strumVoice3, &strumVoice4, &strumVoice5, &strumVoice6, &strumVoice7, &strumVoice8 };
 
 Chord* chords[7] = { &chord1, &chord2, &chord3, &chord4, &chord5, &chord6, &chord7 };
-Button buttons[7] = { Button(chordPin1), Button(chordPin2), Button(chordPin3), Button(chordPin4), Button(chordPin5), Button(chordPin6), Button(chordPin7) };
-Button editButton(editPin);
+Button buttons[7] = { Button(CHORDPIN1), Button(CHORDPIN2), Button(CHORDPIN3), Button(CHORDPIN4), Button(CHORDPIN5), Button(CHORDPIN6), Button(CHORDPIN7) };
+Button editButton(EDITPIN);
 
 int editSelector = 0;
 int editMode = ROOTEDIT;
@@ -231,9 +231,9 @@ void displayUI(int root, chordTypes type) {
 
   if (editMode == ROOTEDIT || editMode == CHORDEDIT) {
     if (editMode == ROOTEDIT) {
-      display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);  //highlight if in ROOTEDIT
+      display.setTextColor(BLACK, WHITE);  //highlight if in ROOTEDIT
     } else {
-      display.setTextColor(SSD1306_WHITE);
+      display.setTextColor(WHITE);
     }
     switch (abs(root % 12)) {
       case 0:
@@ -274,9 +274,9 @@ void displayUI(int root, chordTypes type) {
         break;
     }
     if (editMode == CHORDEDIT) {
-      display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);  //highlight if in CHORDEDIT
+      display.setTextColor(BLACK, WHITE);  //highlight if in CHORDEDIT
     } else {
-      display.setTextColor(SSD1306_WHITE);
+      display.setTextColor(WHITE);
     }
     switch (type) {
       case MAJOR:
@@ -308,7 +308,7 @@ void displayUI(int root, chordTypes type) {
         break;
     }
   } else {
-    display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
+    display.setTextColor(BLACK, WHITE);
     String volStr = String(volume, 2);
     display.println(volStr);
   }
