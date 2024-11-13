@@ -20,11 +20,13 @@ void Voice::setWaveform(int waveform_, float amplitude_) {
 }
 
 void Voice::noteOn(int note) {
+  usbMIDI.sendNoteOn(note, 127, 1);
   float freq = 440 * pow(2.0, (float)(note - 69) / (float)12);
   waveform.frequency(freq);
   envelope.noteOn();
 }
 
-void Voice::noteOff() {
+void Voice::noteOff(int note) {
   envelope.noteOff();
+  usbMIDI.sendNoteOff(note, 0, 1);
 }

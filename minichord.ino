@@ -10,6 +10,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_CAP1188.h>
+#include <string.h>
 
 #define chordPin1 25
 #define chordPin2 26
@@ -92,8 +93,8 @@ BetterEncoder enc(11, 12, 4);
 void setup() {
   Serial.begin(9600);
 
-  enc.incrementHandler(oneClickRight);
-  enc.decrementHandler(oneClickLeft);
+  enc.incrementHandler(encoderIncrement);
+  enc.decrementHandler(encoderDecrement);
 
   //capacitive touch sensor
   if (!cap.begin()) {
@@ -118,7 +119,7 @@ void setup() {
   }
   Serial.println("SSD1306 allocation success!");
   display.clearDisplay();
-  displayChordRoot(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
+  displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
   display.display();
 
   //audio things
@@ -151,7 +152,6 @@ void loop() {
 }
 
 void noteOn(int voice, int noteValue, bool selector) {
-  usbMIDI.sendNoteOn(noteValue, 127, 1);
   if (selector == SUSTAIN) {
     sustainVoices[voice]->noteOn(noteValue);
   } else {
@@ -160,15 +160,14 @@ void noteOn(int voice, int noteValue, bool selector) {
 }
 
 void noteOff(int voice, int noteValue, bool selector) {
-  usbMIDI.sendNoteOff(noteValue, 0, 1);
   if (selector == SUSTAIN) {
-    sustainVoices[voice]->noteOff();
+    sustainVoices[voice]->noteOff(noteValue);
   } else {
-    strumVoices[voice]->noteOff();
+    strumVoices[voice]->noteOff(noteValue);
   }
 }
 
-void oneClickLeft() {
+void encoderIncrement() {
   // increment our count variable and print out that number
   int chordRoot = chords[editSelector]->getRoot();
   int chordType = ((int)chords[editSelector]->getChordType() == 8) ? 0 : (int)chords[editSelector]->getChordType() + 1;
@@ -184,10 +183,10 @@ void oneClickLeft() {
       audioShield.volume(volume);
       break;
   }
-  displayChordRoot(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
+  displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
 }
 
-void oneClickRight() {
+void encoderDecrement() {
   // decrement our count variable and print out that number
   int chordRoot = chords[editSelector]->getRoot();
   int chordType = ((int)chords[editSelector]->getChordType() == 0) ? 8 : (int)chords[editSelector]->getChordType() - 1;
@@ -203,14 +202,14 @@ void oneClickRight() {
       audioShield.volume(volume);
       break;
   }
-  displayChordRoot(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
+  displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
 }
 
 void checkChordButtons() {
   for (int i = 0; i < 7; i++) {
     if (buttons[i].buttonCheck() == 1) {
       editSelector = i;
-      displayChordRoot(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
+      displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
     }
   }
 }
@@ -222,92 +221,97 @@ void checkEdit() {
       editMode = 0;
     }
   }
-  displayChordRoot(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
+  displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
 }
 
-void displayChordRoot(int root, chordTypes type) {
+void displayUI(int root, chordTypes type) {
   display.clearDisplay();
   display.setTextSize(4);  // Normal 1:1 pixel scale
   display.setCursor(0, 0);
 
-  if (editMode == ROOTEDIT) {
-    display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);  //highlight if in ROOTEDIT
+  if (editMode == ROOTEDIT || editMode == CHORDEDIT) {
+    if (editMode == ROOTEDIT) {
+      display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);  //highlight if in ROOTEDIT
+    } else {
+      display.setTextColor(SSD1306_WHITE);
+    }
+    switch (abs(root % 12)) {
+      case 0:
+        display.println(F("C"));
+        break;
+      case 1:
+        display.println(F("C#/Db"));
+        break;
+      case 2:
+        display.println(F("D"));
+        break;
+      case 3:
+        display.println(F("D#/Eb"));
+        break;
+      case 4:
+        display.println(F("E"));
+        break;
+      case 5:
+        display.println(F("F"));
+        break;
+      case 6:
+        display.println(F("F#/Gb"));
+        break;
+      case 7:
+        display.println(F("G"));
+        break;
+      case 8:
+        display.println(F("G#/Ab"));
+        break;
+      case 9:
+        display.println(F("A"));
+        break;
+      case 10:
+        display.println(F("A#/Bb"));
+        break;
+      case 11:
+        display.println(F("B"));
+        break;
+    }
+    if (editMode == CHORDEDIT) {
+      display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);  //highlight if in CHORDEDIT
+    } else {
+      display.setTextColor(SSD1306_WHITE);
+    }
+    switch (type) {
+      case MAJOR:
+        display.println(F("Maj"));
+        break;
+      case MINOR:
+        display.println(F("min"));
+        break;
+      case AUGMENTED:
+        display.println(F("aug"));
+        break;
+      case DIMINISHED:
+        display.println(F("dim"));
+        break;
+      case MAJORSEVEN:
+        display.println(F("Maj7"));
+        break;
+      case MINORSEVEN:
+        display.println(F("min7"));
+        break;
+      case DOMINANTSEVEN:
+        display.println(F("dom7"));
+        break;
+      case HALFDIMINISHEDSEVEN:
+        display.println(F("m7b5"));
+        break;
+      case FULLDIMINISHEDSEVEN:
+        display.println(F("dim7"));
+        break;
+    }
   } else {
-    display.setTextColor(SSD1306_WHITE);
+    display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
+    String volStr = String(volume, 2);
+    display.println(volStr);
   }
-  switch (abs(root % 12)) {
-    case 0:
-      display.println(F("C"));
-      break;
-    case 1:
-      display.println(F("C#/Db"));
-      break;
-    case 2:
-      display.println(F("D"));
-      break;
-    case 3:
-      display.println(F("D#/Eb"));
-      break;
-    case 4:
-      display.println(F("E"));
-      break;
-    case 5:
-      display.println(F("F"));
-      break;
-    case 6:
-      display.println(F("F#/Gb"));
-      break;
-    case 7:
-      display.println(F("G"));
-      break;
-    case 8:
-      display.println(F("G#/Ab"));
-      break;
-    case 9:
-      display.println(F("A"));
-      break;
-    case 10:
-      display.println(F("A#/Bb"));
-      break;
-    case 11:
-      display.println(F("B"));
-      break;
-  }
-  if (editMode == CHORDEDIT) {
-    display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);  //highlight if in CHORDEDIT
-  } else {
-    display.setTextColor(SSD1306_WHITE);
-  }
-  switch (type) {
-    case MAJOR:
-      display.println(F("Maj"));
-      break;
-    case MINOR:
-      display.println(F("min"));
-      break;
-    case AUGMENTED:
-      display.println(F("aug"));
-      break;
-    case DIMINISHED:
-      display.println(F("dim"));
-      break;
-    case MAJORSEVEN:
-      display.println(F("Maj7"));
-      break;
-    case MINORSEVEN:
-      display.println(F("min7"));
-      break;
-    case DOMINANTSEVEN:
-      display.println(F("dom7"));
-      break;
-    case HALFDIMINISHEDSEVEN:
-      display.println(F("m7b5"));
-      break;
-    case FULLDIMINISHEDSEVEN:
-      display.println(F("dim7"));
-      break;
-  }
-
   display.display();
 }
 
