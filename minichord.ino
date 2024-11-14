@@ -170,7 +170,6 @@ void noteOff(int voice, int noteValue, bool selector) {
 }
 
 void encoderIncrement() {
-  // increment our count variable and print out that number
   int chordRoot = chords[editSelector]->getRoot();
   int chordType = ((int)chords[editSelector]->getChordType() == 8) ? 0 : (int)chords[editSelector]->getChordType() + 1;
   switch (editMode) {
@@ -190,7 +189,6 @@ void encoderIncrement() {
 }
 
 void encoderDecrement() {
-  // decrement our count variable and print out that number
   int chordRoot = chords[editSelector]->getRoot();
   int chordType = ((int)chords[editSelector]->getChordType() == 0) ? 8 : (int)chords[editSelector]->getChordType() - 1;
   switch (editMode) {
@@ -235,91 +233,16 @@ void displayUI() {
   int root = chords[editSelector]->getRoot();
   chordTypes type = chords[editSelector]->getChordType();
   display.clearDisplay();
-  display.setTextSize(4);  // Normal 1:1 pixel scale
-  display.setCursor(0, 0);
+  
+  display.setTextColor(WHITE);
 
-  if (editMode == ROOTEDIT || editMode == CHORDEDIT) {
-    if (editMode == ROOTEDIT) {
-      display.setTextColor(BLACK, WHITE);  //highlight if in ROOTEDIT
-    } else {
-      display.setTextColor(WHITE);
-    }
-    switch (abs(root % 12)) {
-      case 0:
-        display.println(F("C"));
-        break;
-      case 1:
-        display.println(F("C#/Db"));
-        break;
-      case 2:
-        display.println(F("D"));
-        break;
-      case 3:
-        display.println(F("D#/Eb"));
-        break;
-      case 4:
-        display.println(F("E"));
-        break;
-      case 5:
-        display.println(F("F"));
-        break;
-      case 6:
-        display.println(F("F#/Gb"));
-        break;
-      case 7:
-        display.println(F("G"));
-        break;
-      case 8:
-        display.println(F("G#/Ab"));
-        break;
-      case 9:
-        display.println(F("A"));
-        break;
-      case 10:
-        display.println(F("A#/Bb"));
-        break;
-      case 11:
-        display.println(F("B"));
-        break;
-    }
-    if (editMode == CHORDEDIT) {
-      display.setTextColor(BLACK, WHITE);  //highlight if in CHORDEDIT
-    } else {
-      display.setTextColor(WHITE);
-    }
-    switch (type) {
-      case MAJOR:
-        display.println(F("Maj"));
-        break;
-      case MINOR:
-        display.println(F("min"));
-        break;
-      case AUGMENTED:
-        display.println(F("aug"));
-        break;
-      case DIMINISHED:
-        display.println(F("dim"));
-        break;
-      case MAJORSEVEN:
-        display.println(F("Maj7"));
-        break;
-      case MINORSEVEN:
-        display.println(F("min7"));
-        break;
-      case DOMINANTSEVEN:
-        display.println(F("dom7"));
-        break;
-      case HALFDIMINISHEDSEVEN:
-        display.println(F("m7b5"));
-        break;
-      case FULLDIMINISHEDSEVEN:
-        display.println(F("dim7"));
-        break;
-    }
-  } else if (editMode == VOLEDIT) {
-    display.setTextColor(BLACK, WHITE);
-    String volStr = String(volume, 2);
-    display.println(volStr);
+  if (editMode < 3) {
+    display.setCursor(0, 0);
+    displayChordRoot(root);
+    display.setCursor(0, 32);
+    displayChordType(type);
+    display.setCursor(80, 0);
+    displayVolume();
   } else {
     animateStrings();
   }
@@ -337,6 +260,112 @@ void animateStrings() {
       display.drawLine(j, yLevel + prevJitter, j+8, yLevel + jitter, WHITE);
       prevJitter = jitter;
     }
+  }
+}
+
+void displayVolume() {
+  display.setTextSize(1); 
+  display.println("Volume:");
+  display.setCursor(68, 10);
+  display.setTextSize(2); 
+  if (editMode == VOLEDIT) {
+    display.print(F(">"));
+  } else {
+    display.print(F(" "));
+  }
+  String volStr = String(volume, 2);
+  display.println(volStr);
+  
+}
+
+void displayChordRoot(int root) {
+  display.setTextSize(1); 
+  display.println("Chord Root:");
+  display.setCursor(0, 10);
+  display.setTextSize(2); 
+  switch (abs(root % 12)) {
+    case 0:
+      display.print(F("C"));
+      break;
+    case 1:
+      display.print(F("C#/Db"));
+      break;
+    case 2:
+      display.print(F("D"));
+      break;
+    case 3:
+      display.print(F("D#/Eb"));
+      break;
+    case 4:
+      display.print(F("E"));
+      break;
+    case 5:
+      display.print(F("F"));
+      break;
+    case 6:
+      display.print(F("F#/Gb"));
+      break;
+    case 7:
+      display.print(F("G"));
+      break;
+    case 8:
+      display.print(F("G#/Ab"));
+      break;
+    case 9:
+      display.print(F("A"));
+      break;
+    case 10:
+      display.print(F("A#/Bb"));
+      break;
+    case 11:
+      display.print(F("B"));
+      break;
+  }
+  if (editMode == ROOTEDIT) {
+    display.println(F("<"));
+  } else {
+    display.println(F(""));
+  }
+}
+
+void displayChordType(chordTypes type) {
+  display.setTextSize(1); 
+  display.println("Chord Type:");
+  display.setCursor(0, 42);
+  display.setTextSize(2); 
+  switch (type) {
+    case MAJOR:
+      display.print(F("Maj"));
+      break;
+    case MINOR:
+      display.print(F("min"));
+      break;
+    case AUGMENTED:
+      display.print(F("aug"));
+      break;
+    case DIMINISHED:
+      display.print(F("dim"));
+      break;
+    case MAJORSEVEN:
+      display.print(F("Maj7"));
+      break;
+    case MINORSEVEN:
+      display.print(F("min7"));
+      break;
+    case DOMINANTSEVEN:
+      display.print(F("dom7"));
+      break;
+    case HALFDIMINISHEDSEVEN:
+      display.print(F("m7b5"));
+      break;
+    case FULLDIMINISHEDSEVEN:
+      display.print(F("dim7"));
+      break;
+  }
+  if (editMode == CHORDEDIT) {
+    display.println("<");
+  } else {
+    display.println(F(""));
   }
 }
 
