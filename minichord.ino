@@ -12,14 +12,14 @@
 #include <Adafruit_CAP1188.h>
 #include <string.h>
 
-#define CHORDPIN1 25
-#define CHORDPIN2 26
-#define CHORDPIN3 27
-#define CHORDPIN4 28
-#define CHORDPIN5 29
-#define CHORDPIN6 30
-#define CHORDPIN7 31
-#define EDITPIN 10
+#define CHORDPIN1 33
+#define CHORDPIN2 34
+#define CHORDPIN3 35
+#define CHORDPIN4 36
+#define CHORDPIN5 37
+#define CHORDPIN6 38
+#define CHORDPIN7 39
+#define EDITPIN 26
 
 #define ROOTEDIT 0
 #define CHORDEDIT 1
@@ -89,7 +89,7 @@ int editMode = ROOTEDIT;
 
 float volume = 0.5;
 
-BetterEncoder enc(11, 12, 4);
+BetterEncoder enc(25, 24, 3);
 
 void setup() {
   Serial.begin(9600);
