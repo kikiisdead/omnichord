@@ -12,13 +12,16 @@ class Voice {
 public:
   AudioSynthWaveform              waveform;
   AudioEffectEnvelope             envelope;
-  AudioConnection                 *patchCord[1]; // total patchCordCount:1 including array typed ones.
+  AudioAnalyzeRMS                 peak;
+  AudioConnection                 *patchCord[2]; // total patchCordCount:1 including array typed ones.
 
   Voice(int waveform_, float amplitude_);
   void setEnvelope(float attack, float decay, float sustain, float release);
   void setWaveform(int waveform_, float amplitude_);
   void noteOn(int note);
   void noteOff(int note);
+  bool isPlaying();
+  float readPeak();
 };
 
 #endif 

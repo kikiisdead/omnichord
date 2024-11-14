@@ -3,6 +3,7 @@
 Voice::Voice(int waveform_, float amplitude_) { 
   int pci = 0; // used only for adding new patchcords
   patchCord[pci++] = new AudioConnection(waveform, 0, envelope, 0); 
+  patchCord[pci++] = new AudioConnection(envelope, 0, peak, 0);
   waveform.begin(waveform_);
   waveform.amplitude(amplitude_);
 }
@@ -29,4 +30,12 @@ void Voice::noteOn(int note) {
 void Voice::noteOff(int note) {
   envelope.noteOff();
   usbMIDI.sendNoteOff(note, 0, 1);
+}
+
+bool Voice::isPlaying() {
+  return envelope.isActive();
+}
+
+float Voice::readPeak() {
+  return peak.read();
 }

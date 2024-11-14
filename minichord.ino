@@ -24,6 +24,7 @@
 #define ROOTEDIT 0
 #define CHORDEDIT 1
 #define VOLEDIT 2
+#define ANIM 3
 
 #define CAP1188_RESET -1
 
@@ -36,7 +37,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 Adafruit_CAP1188 cap = Adafruit_CAP1188();
 
-static const unsigned char PROGMEM logo_bmp[] = { 0b00000000, 0b11000000, 0b00000001, 0b11000000, 0b00000001, 0b11000000, 0b00000011, 0b11100000, 0b11110011, 0b11100000, 0b11111110, 0b11111000, 0b01111110, 0b11111111, 0b00110011, 0b10011111, 0b00011111, 0b11111100, 0b00001101, 0b01110000, 0b00011011, 0b10100000, 0b00111111, 0b11100000, 0b00111111, 0b11110000, 0b01111100, 0b11110000, 0b01110000, 0b01110000, 0b00000000, 0b00110000 };
+elapsedMillis holdTime;
 
 Voice sustainVoice1(WAVEFORM_TRIANGLE, 0.5);
 Voice sustainVoice2(WAVEFORM_TRIANGLE, 0.5);
@@ -182,6 +183,8 @@ void encoderIncrement() {
       volumeIncrement();
       audioShield.volume(volume);
       break;
+    case ANIM:
+      break;
   }
   displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
 }
@@ -201,6 +204,8 @@ void encoderDecrement() {
       volumeDecrement();
       audioShield.volume(volume);
       break;
+    case ANIM:
+      break;
   }
   displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
 }
@@ -219,6 +224,11 @@ void checkEdit() {
     editMode += 1;
     if (editMode > 2) {
       editMode = 0;
+    }
+    holdTime = 0;
+  } else if (editButton.buttonCheck() == 2) {
+    if (holdTime >= 500 && holdTime <= 550) {
+      editMode = ANIM;
     }
   }
   displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
@@ -307,12 +317,28 @@ void displayUI(int root, chordTypes type) {
         display.println(F("dim7"));
         break;
     }
-  } else {
+  } else if (editMode == VOLEDIT) {
     display.setTextColor(BLACK, WHITE);
     String volStr = String(volume, 2);
     display.println(volStr);
+  } else {
+    animateStrings();
   }
   display.display();
+}
+
+void animateStrings() {
+  for (int i = 0; i < 8; i ++) {
+    int yLevel = (i*8) + 4;
+    float jitterAmount = strumVoices[i]->readPeak() * 4;
+    float prevJitter = 0;
+    for (int j = 0; j < display.width(); j += 8) {
+      int randomInt = random(-4, 5);
+      float jitter = randomInt * jitterAmount;
+      display.drawLine(j, yLevel + prevJitter, j+8, yLevel + jitter, WHITE);
+      prevJitter = jitter;
+    }
+  }
 }
 
 void adaCapCheck(int noteTouch[8]) {

@@ -93,6 +93,7 @@ void Chord::populateVector() {
     strumPitches.at(2) += 24;
   }
   std::sort(strumPitches.begin(), strumPitches.end());
+  std::reverse(strumPitches.begin(), strumPitches.end());
 }
 
 void Chord::noteOnHandler(void (*func)(int, int, bool)) {
