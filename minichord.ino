@@ -120,7 +120,7 @@ void setup() {
   }
   Serial.println("SSD1306 allocation success!");
   display.clearDisplay();
-  displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
+  displayUI();
   display.display();
 
   //audio things
@@ -150,6 +150,7 @@ void loop() {
   for (int i = 0; i < 7; i++) {
     chords[i]->update();
   }
+  displayUI();
 }
 
 void noteOn(int voice, int noteValue, bool selector) {
@@ -186,7 +187,6 @@ void encoderIncrement() {
     case ANIM:
       break;
   }
-  displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
 }
 
 void encoderDecrement() {
@@ -207,14 +207,12 @@ void encoderDecrement() {
     case ANIM:
       break;
   }
-  displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
 }
 
 void checkChordButtons() {
   for (int i = 0; i < 7; i++) {
     if (buttons[i].buttonCheck() == 1) {
       editSelector = i;
-      displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
     }
   }
 }
@@ -227,14 +225,15 @@ void checkEdit() {
     }
     holdTime = 0;
   } else if (editButton.buttonCheck() == 2) {
-    if (holdTime >= 500 && holdTime <= 550) {
+    if (holdTime >= 500) {
       editMode = ANIM;
     }
   }
-  displayUI(chords[editSelector]->getRoot(), chords[editSelector]->getChordType());
 }
 
-void displayUI(int root, chordTypes type) {
+void displayUI() {
+  int root = chords[editSelector]->getRoot();
+  chordTypes type = chords[editSelector]->getChordType();
   display.clearDisplay();
   display.setTextSize(4);  // Normal 1:1 pixel scale
   display.setCursor(0, 0);
