@@ -11,6 +11,12 @@
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_CAP1188.h>
 #include <string.h>
+#include <EEPROM.h>
+
+// MEMORY ALLOCATION
+// Addresses 0-6 are for the root note
+// Addresses 10-16 are for the chord type
+// don't want to write too many times so only write when changing off of the corresponding editMode
 
 #define CHORDPIN1 33
 #define CHORDPIN2 34
@@ -36,8 +42,6 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 Adafruit_CAP1188 cap = Adafruit_CAP1188();
-
-elapsedMillis holdTime;
 
 Voice sustainVoice1(WAVEFORM_TRIANGLE, 0.5);
 Voice sustainVoice2(WAVEFORM_TRIANGLE, 0.5);
@@ -91,6 +95,9 @@ float volume = 0.5;
 
 BetterEncoder enc(25, 24, 3);
 
+elapsedMillis holdTime;
+elapsedMillis animationTime;
+
 void setup() {
   Serial.begin(9600);
 
@@ -100,7 +107,8 @@ void setup() {
   //capacitive touch sensor
   if (!cap.begin()) {
     Serial.println("CAP1188 not found");
-    while (1);
+    while (1)
+      ;
   }
   Serial.println("CAP1188 found!");
 
@@ -109,14 +117,15 @@ void setup() {
     chords[i]->noteOnHandler(noteOn);
     chords[i]->noteOffHandler(noteOff);
     chords[i]->capCheckHandler(adaCapCheck);
-    chords[i]->initRoot(i * 2);
-    chords[i]->setChordType(MAJOR);
+    chords[i]->initRoot(EEPROM.read(i));
+    chords[i]->setChordType((chordTypes)(EEPROM.read(i + 10) % 9));
   }
 
   //display
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
-    while (1);  // Don't proceed, loop forever
+    while (1)
+      ;  // Don't proceed, loop forever
   }
   Serial.println("SSD1306 allocation success!");
   display.clearDisplay();
@@ -124,18 +133,17 @@ void setup() {
   display.display();
 
   //audio things
-  AudioMemory(24);
+  AudioMemory(12);
   audioShield.enable();
   audioShield.volume(volume);
 
   for (int i = 0; i < 11; i++) {
     mixer.gain(i, 0.5);
   }
-
-  for (int i = 0; i < 3; i ++) {
+  for (int i = 0; i < 3; i++) {
     sustainVoices[i]->setEnvelope(10, 200, 0.6, 80);
   }
-  for (int i = 0; i < 8; i ++) {
+  for (int i = 0; i < 8; i++) {
     strumVoices[i]->setEnvelope(10, 250, 0.3, 500);
   }
 
@@ -150,7 +158,9 @@ void loop() {
   for (int i = 0; i < 7; i++) {
     chords[i]->update();
   }
-  displayUI();
+  if (editMode == ANIM) {
+    animateStrings();
+  }
 }
 
 void noteOn(int voice, int noteValue, bool selector) {
@@ -186,6 +196,7 @@ void encoderIncrement() {
     case ANIM:
       break;
   }
+  displayUI();
 }
 
 void encoderDecrement() {
@@ -205,168 +216,7 @@ void encoderDecrement() {
     case ANIM:
       break;
   }
-}
-
-void checkChordButtons() {
-  for (int i = 0; i < 7; i++) {
-    if (buttons[i].buttonCheck() == 1) {
-      editSelector = i;
-    }
-  }
-}
-
-void checkEdit() {
-  if (editButton.buttonCheck() == 1) {
-    editMode += 1;
-    if (editMode > 2) {
-      editMode = 0;
-    }
-    holdTime = 0;
-  } else if (editButton.buttonCheck() == 2) {
-    if (holdTime >= 500) {
-      editMode = ANIM;
-    }
-  }
-}
-
-void displayUI() {
-  int root = chords[editSelector]->getRoot();
-  chordTypes type = chords[editSelector]->getChordType();
-  display.clearDisplay();
-  
-  display.setTextColor(WHITE);
-
-  if (editMode < 3) {
-    display.setCursor(0, 0);
-    displayChordRoot(root);
-    display.setCursor(0, 32);
-    displayChordType(type);
-    display.setCursor(80, 0);
-    displayVolume();
-  } else {
-    animateStrings();
-  }
-  display.display();
-}
-
-void animateStrings() {
-  for (int i = 0; i < 8; i ++) {
-    int yLevel = (i*8) + 4;
-    float jitterAmount = strumVoices[i]->readPeak() * 4;
-    float prevJitter = 0;
-    for (int j = 0; j < display.width(); j += 8) {
-      int randomInt = random(-4, 5);
-      float jitter = randomInt * jitterAmount;
-      display.drawLine(j, yLevel + prevJitter, j+8, yLevel + jitter, WHITE);
-      prevJitter = jitter;
-    }
-  }
-}
-
-void displayVolume() {
-  display.setTextSize(1); 
-  display.println("Volume:");
-  display.setCursor(68, 10);
-  display.setTextSize(2); 
-  if (editMode == VOLEDIT) {
-    display.print(F(">"));
-  } else {
-    display.print(F(" "));
-  }
-  String volStr = String(volume, 2);
-  display.println(volStr);
-  
-}
-
-void displayChordRoot(int root) {
-  display.setTextSize(1); 
-  display.println("Chord Root:");
-  display.setCursor(0, 10);
-  display.setTextSize(2); 
-  switch (abs(root % 12)) {
-    case 0:
-      display.print(F("C"));
-      break;
-    case 1:
-      display.print(F("C#/Db"));
-      break;
-    case 2:
-      display.print(F("D"));
-      break;
-    case 3:
-      display.print(F("D#/Eb"));
-      break;
-    case 4:
-      display.print(F("E"));
-      break;
-    case 5:
-      display.print(F("F"));
-      break;
-    case 6:
-      display.print(F("F#/Gb"));
-      break;
-    case 7:
-      display.print(F("G"));
-      break;
-    case 8:
-      display.print(F("G#/Ab"));
-      break;
-    case 9:
-      display.print(F("A"));
-      break;
-    case 10:
-      display.print(F("A#/Bb"));
-      break;
-    case 11:
-      display.print(F("B"));
-      break;
-  }
-  if (editMode == ROOTEDIT) {
-    display.println(F("<"));
-  } else {
-    display.println(F(""));
-  }
-}
-
-void displayChordType(chordTypes type) {
-  display.setTextSize(1); 
-  display.println("Chord Type:");
-  display.setCursor(0, 42);
-  display.setTextSize(2); 
-  switch (type) {
-    case MAJOR:
-      display.print(F("Maj"));
-      break;
-    case MINOR:
-      display.print(F("min"));
-      break;
-    case AUGMENTED:
-      display.print(F("aug"));
-      break;
-    case DIMINISHED:
-      display.print(F("dim"));
-      break;
-    case MAJORSEVEN:
-      display.print(F("Maj7"));
-      break;
-    case MINORSEVEN:
-      display.print(F("min7"));
-      break;
-    case DOMINANTSEVEN:
-      display.print(F("dom7"));
-      break;
-    case HALFDIMINISHEDSEVEN:
-      display.print(F("m7b5"));
-      break;
-    case FULLDIMINISHEDSEVEN:
-      display.print(F("dim7"));
-      break;
-  }
-  if (editMode == CHORDEDIT) {
-    display.println("<");
-  } else {
-    display.println(F(""));
-  }
+  displayUI();
 }
 
 void adaCapCheck(int noteTouch[8]) {
@@ -390,4 +240,222 @@ void volumeDecrement() {
   if (volume > 0) {
     volume -= 0.01;
   }
+}
+
+void checkChordButtons() {
+  for (int i = 0; i < 7; i++) {
+    if (buttons[i].buttonCheck() == 1) {
+      editSelector = i;
+      displayUI();
+    }
+  }
+}
+
+void checkEdit() {
+  if (editButton.buttonCheck() == 1) {
+    if (editMode == ROOTEDIT) {
+      EEPROM.write(editSelector, chords[editSelector]->getRoot());
+      Serial.println("Writing root note");
+    } else if (editMode == CHORDEDIT) {
+      EEPROM.write(editSelector + 10, (int)chords[editSelector]->getChordType());
+      Serial.println("Writing chord type");
+    }
+    editMode += 1;
+    if (editMode > 2) {
+      editMode = 0;
+    }
+    holdTime = 0;
+    displayUI();
+  } else if (editButton.buttonCheck() == 2) {
+    if (holdTime >= 500) {
+      editMode = ANIM;
+    }
+  }
+}
+
+//UI THINGS
+void displayUI() {
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  displayLabel("Chord Root:", 0);
+  displayItem(getChordRoot(), 0);
+  displayLabel("Chord Type:", 1);
+  displayItem(getChordType(), 1);
+  displayLabel("Volume:", 2);
+  displayItem(getVolume(), 2);
+  displaySelector(editMode);
+  display.display();
+}
+
+void animateStrings() {
+  if (animationTime >= 50) {  //slow down so that it is less lag
+    display.clearDisplay();
+    for (int i = 0; i < 8; i++) {
+      int yLevel = (i * 8) + 4;
+      float jitterAmount = strumVoices[i]->readPeak() * 4;
+      float prevJitter = 0;
+      for (int j = 0; j < display.width(); j += 8) {
+        int randomInt = random(-4, 5);
+        float jitter = randomInt * jitterAmount;
+        display.drawLine(j, yLevel + prevJitter, j + 8, yLevel + jitter, WHITE);
+        prevJitter = jitter;
+      }
+    }
+    display.display();
+    animationTime = 0;
+  }
+}
+
+void displayLabel(String labelText, int position) {
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.getTextBounds(labelText, 0, 0, &x1, &y1, &w, &h);
+  switch (position) {
+    case 0:
+      display.setCursor(0, 0);
+      break;
+    case 1:
+      display.setCursor(0, SCREEN_HEIGHT / 2);
+      break;
+    case 2:
+      display.setCursor(SCREEN_WIDTH - w, 0);
+      break;
+    case 3:
+      display.setCursor(SCREEN_WIDTH - w, SCREEN_HEIGHT / 2);
+      break;
+  }
+  display.print(labelText);
+}
+
+void displayItem(String itemText, int position) {
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.getTextBounds(itemText, 0, 0, &x1, &y1, &w, &h);
+  switch (position) {
+    case 0:
+      display.setCursor(0, 10);
+      break;
+    case 1:
+      display.setCursor(0, (SCREEN_HEIGHT / 2) + 10);
+      break;
+    case 2:
+      display.setCursor(SCREEN_WIDTH - w, 10);
+      break;
+    case 3:
+      display.setCursor(SCREEN_WIDTH - w, (SCREEN_HEIGHT / 2) + 10);
+      break;
+  }
+  display.print(itemText);
+}
+
+void displaySelector(int position) {
+  switch (position) {
+    case 0:
+      display.setCursor(SCREEN_WIDTH / 2, 10);
+      break;
+    case 1:
+      display.setCursor(SCREEN_WIDTH / 2, (SCREEN_HEIGHT / 2) + 10);
+      break;
+    case 2:
+      display.setCursor(SCREEN_WIDTH / 2, 10);
+      break;
+    case 3:
+      display.setCursor(SCREEN_WIDTH / 2, (SCREEN_HEIGHT / 2) + 10);
+      break;
+  }
+  if (position < 2) {
+    display.print(F("<"));
+  } else {
+    display.print(F(">"));
+  }
+}
+
+String getChordRoot() {
+  int root = chords[editSelector]->getRoot();
+  switch (abs(root % 12)) {
+    case 0:
+      return "C";
+      break;
+    case 1:
+      return "C#/Db";
+      break;
+    case 2:
+      return "D";
+      break;
+    case 3:
+      return "D#/Eb";
+      break;
+    case 4:
+      return "E";
+      break;
+    case 5:
+      return "F";
+      break;
+    case 6:
+      return "F#/Gb";
+      break;
+    case 7:
+      return "G";
+      break;
+    case 8:
+      return "G#/Ab";
+      break;
+    case 9:
+      return "A";
+      break;
+    case 10:
+      return "A#/Bb";
+      break;
+    case 11:
+      return "B";
+      break;
+    default:
+      return "";
+      break;
+  }
+}
+
+String getChordType() {
+  chordTypes type = chords[editSelector]->getChordType();
+  switch (type) {
+    case MAJOR:
+      return "Maj";
+      break;
+    case MINOR:
+      return "min";
+      break;
+    case AUGMENTED:
+      return "aug";
+      break;
+    case DIMINISHED:
+      return "dim";
+      break;
+    case MAJORSEVEN:
+      return "Maj7";
+      break;
+    case MINORSEVEN:
+      return "min7";
+      break;
+    case DOMINANTSEVEN:
+      return "dom7";
+      break;
+    case HALFDIMINISHEDSEVEN:
+      return "m7b5";
+      break;
+    case FULLDIMINISHEDSEVEN:
+      return "dim7";
+      break;
+    default:
+      return "";
+      break;
+  }
+}
+
+String getVolume() {
+  String volStr = String(volume, 2);
+  return volStr;
 }
