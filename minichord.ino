@@ -54,11 +54,9 @@ Voice strumVoice5(WAVEFORM_TRIANGLE, 0.5);
 Voice strumVoice6(WAVEFORM_TRIANGLE, 0.5);
 Voice strumVoice7(WAVEFORM_TRIANGLE, 0.5);
 Voice strumVoice8(WAVEFORM_TRIANGLE, 0.5);
-
 AudioMixer11 mixer;
 AudioOutputI2S i2sOut;
 AudioControlSGTL5000 audioShield;
-
 AudioConnection patchCord1(sustainVoice1.envelope, 0, mixer, 0);
 AudioConnection patchCord2(sustainVoice2.envelope, 0, mixer, 1);
 AudioConnection patchCord3(sustainVoice3.envelope, 0, mixer, 2);
@@ -246,7 +244,9 @@ void checkChordButtons() {
   for (int i = 0; i < 7; i++) {
     if (buttons[i].buttonCheck() == 1) {
       editSelector = i;
-      displayUI();
+      if (editMode != ANIM) {
+        displayUI();
+      }
     }
   }
 }
@@ -283,12 +283,13 @@ void displayUI() {
   displayItem(getChordType(), 1);
   displayLabel("Volume:", 2);
   displayItem(getVolume(), 2);
+  
   displaySelector(editMode);
   display.display();
 }
 
 void animateStrings() {
-  if (animationTime >= 50) {  //slow down so that it is less lag
+  if (animationTime >= 50) {  //slow down to 20 fps so that it is less laggy
     display.clearDisplay();
     for (int i = 0; i < 8; i++) {
       int yLevel = (i * 8) + 4;
@@ -353,18 +354,20 @@ void displayItem(String itemText, int position) {
 }
 
 void displaySelector(int position) {
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
   switch (position) {
     case 0:
-      display.setCursor(SCREEN_WIDTH / 2, 10);
+      display.setCursor((SCREEN_WIDTH / 2), 10);
       break;
     case 1:
-      display.setCursor(SCREEN_WIDTH / 2, (SCREEN_HEIGHT / 2) + 10);
+      display.setCursor((SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 2) + 10);
       break;
     case 2:
-      display.setCursor(SCREEN_WIDTH / 2, 10);
+      display.setCursor((SCREEN_WIDTH / 2), 10);
       break;
     case 3:
-      display.setCursor(SCREEN_WIDTH / 2, (SCREEN_HEIGHT / 2) + 10);
+      display.setCursor((SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 2) + 10);
       break;
   }
   if (position < 2) {
