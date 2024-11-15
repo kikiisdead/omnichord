@@ -30,7 +30,8 @@
 #define ROOTEDIT 0
 #define CHORDEDIT 1
 #define VOLEDIT 2
-#define ANIM 3
+#define VELEDIT 3
+#define ANIM 4
 
 #define CAP1188_RESET -1
 
@@ -88,6 +89,8 @@ Button editButton(EDITPIN);
 
 int editSelector = 0;
 int editMode = ROOTEDIT;
+
+int velocity = 127;
 
 float volume = 0.5;
 
@@ -162,6 +165,7 @@ void loop() {
 }
 
 void noteOn(int voice, int noteValue, bool selector) {
+  usbMIDI.sendNoteOn(noteValue, velocity, 1);
   if (selector == SUSTAIN) {
     sustainVoices[voice]->noteOn(noteValue);
   } else {
@@ -170,6 +174,7 @@ void noteOn(int voice, int noteValue, bool selector) {
 }
 
 void noteOff(int voice, int noteValue, bool selector) {
+  usbMIDI.sendNoteOff(note, 0, 1);
   if (selector == SUSTAIN) {
     sustainVoices[voice]->noteOff(noteValue);
   } else {
@@ -191,6 +196,9 @@ void encoderIncrement() {
       volumeIncrement();
       audioShield.volume(volume);
       break;
+    case VELEDIT:
+      velocity += 1;
+      break;
     case ANIM:
       break;
   }
@@ -210,6 +218,9 @@ void encoderDecrement() {
     case VOLEDIT:
       volumeDecrement();
       audioShield.volume(volume);
+      break;
+    case VELEDIT:
+      velocity -= 1;
       break;
     case ANIM:
       break;
@@ -244,6 +255,14 @@ void checkChordButtons() {
   for (int i = 0; i < 7; i++) {
     if (buttons[i].buttonCheck() == 1) {
       editSelector = i;
+      if (chords[editSelector]->getRoot() != EEPROM.read(editSelector)) {
+        EEPROM.write(editSelector, chords[editSelector]->getRoot());
+        Serial.println("Writing root note");
+      } 
+      if ((int)chords[editSelector]->getChordType() != EEPROM.read(editSelector + 10)) {
+        EEPROM.write(editSelector + 10, (int)chords[editSelector]->getChordType());
+        Serial.println("Writing chord type");
+      }
       if (editMode != ANIM) {
         displayUI();
       }
@@ -253,15 +272,8 @@ void checkChordButtons() {
 
 void checkEdit() {
   if (editButton.buttonCheck() == 1) {
-    if (editMode == ROOTEDIT && chords[editSelector]->getRoot() != EEPROM.read(editSelector)) {
-      EEPROM.write(editSelector, chords[editSelector]->getRoot());
-      Serial.println("Writing root note");
-    } else if (editMode == CHORDEDIT && (int)chords[editSelector]->getChordType() != EEPROM.read(editSelector + 10)) {
-      EEPROM.write(editSelector + 10, (int)chords[editSelector]->getChordType());
-      Serial.println("Writing chord type");
-    }
     editMode += 1;
-    if (editMode > 2) {
+    if (editMode > 3) {
       editMode = 0;
     }
     holdTime = 0;
@@ -283,7 +295,8 @@ void displayUI() {
   displayItem(getChordType(), 1);
   displayLabel("Volume:", 2);
   displayItem(getVolume(), 2);
-  
+  displayLabel("Velocity:", 3);
+  displayItem(String(velocity), 3);
   displaySelector(editMode);
   display.display();
 }
