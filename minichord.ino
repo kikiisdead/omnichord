@@ -253,10 +253,10 @@ void checkChordButtons() {
 
 void checkEdit() {
   if (editButton.buttonCheck() == 1) {
-    if (editMode == ROOTEDIT) {
+    if (editMode == ROOTEDIT && chords[editSelector]->getRoot() != EEPROM.read(editSelector)) {
       EEPROM.write(editSelector, chords[editSelector]->getRoot());
       Serial.println("Writing root note");
-    } else if (editMode == CHORDEDIT) {
+    } else if (editMode == CHORDEDIT && (int)chords[editSelector]->getChordType() != EEPROM.read(editSelector + 10)) {
       EEPROM.write(editSelector + 10, (int)chords[editSelector]->getChordType());
       Serial.println("Writing chord type");
     }
